@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT ในการศึกษา - Flashcard & Quiz Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-rose-50/60 text-slate-700 min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-rose-100 p-4 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-purple-200 text-purple-700 p-2.5 rounded-2xl shadow-inner">
+                    <i data-lucide="cpu" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800">IoT ในการศึกษา</h1>
+                    <p class="text-xs text-purple-500 font-medium">Flashcard & Interactive Quiz</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button id="mode-cards" onclick="switchMode('cards')" class="px-4 py-2 rounded-xl bg-purple-400 text-white font-semibold text-sm flex items-center gap-2 shadow-md shadow-purple-200 hover:bg-purple-500 transition">
+                    <i data-lucide="layers" class="w-4 h-4"></i> การ์ดคำถาม
+                </button>
+                <button id="mode-quiz" onclick="switchMode('quiz')" class="px-4 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 font-semibold text-sm flex items-center gap-2 hover:bg-rose-100/50 transition">
+                    <i data-lucide="gamepad-2" class="w-4 h-4"></i> แบบทดสอบ
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col justify-center items-center">
+        
+        <!-- CARD MODE -->
+        <div id="cards-view" class="w-full max-w-xl flex flex-col items-center gap-6">
+            <!-- Progress Bar -->
+            <div class="w-full flex justify-between items-center text-sm text-slate-500 font-semibold">
+                <span id="card-index" class="bg-white/80 px-3 py-1 rounded-full border border-slate-200 shadow-sm">ข้อที่ 1 / 10</span>
+                <span id="card-topic" class="text-purple-600 bg-purple-100 border border-purple-200 px-3 py-1 rounded-full text-xs font-bold">หัวข้อ 1: พื้นฐาน IoT</span>
+            </div>
+            
+            <div class="w-full bg-slate-200/70 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
+                <div id="progress-bar" class="bg-gradient-to-r from-purple-400 to-pink-400 h-full w-10 rounded-full transition-all duration-300"></div>
+            </div>
+
+            <!-- Flashcard 3D -->
+            <div class="w-full h-80 perspective-1000 cursor-pointer" onclick="flipCard()">
+                <div id="card-inner" class="relative w-full h-full duration-500 transform-style-3d shadow-xl rounded-3xl">
+                    
+                    <!-- Front -->
+                    <div class="absolute w-full h-full backface-hidden bg-gradient-to-br from-white via-rose-50/40 to-purple-50/40 border border-purple-100 rounded-3xl p-6 flex flex-col justify-between items-center text-center shadow-lg">
+                        <span class="text-xs font-bold tracking-wider text-purple-600 uppercase bg-purple-100/80 border border-purple-200 px-3.5 py-1.5 rounded-full">ด้านหน้า (คำถาม)</span>
+                        <div class="my-auto">
+                            <h2 id="card-front-text" class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed">คำถามจะปรากฏที่นี่...</h2>
+                            <p id="card-hint" class="text-sm text-amber-700 bg-amber-50 border border-amber-200/80 px-4 py-2 rounded-xl mt-4 font-medium hidden">คำใบ้: ...</p>
+                        </div>
+                        <p class="text-xs text-purple-400 font-medium flex items-center gap-1.5">
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> คลิกที่การ์ดเพื่อดูคำตอบ
+                        </p>
+                    </div>
+
+                    <!-- Back -->
+                    <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-gradient-to-br from-teal-50 via-emerald-50/50 to-white border border-emerald-200 rounded-3xl p-6 flex flex-col justify-between items-center text-center shadow-lg">
+                        <span class="text-xs font-bold tracking-wider text-emerald-600 uppercase bg-emerald-100 border border-emerald-200 px-3.5 py-1.5 rounded-full">ด้านหลัง (เฉลย)</span>
+                        <div class="my-auto overflow-y-auto max-h-48 px-2">
+                            <p id="card-back-text" class="text-base md:text-lg text-slate-700 font-medium leading-relaxed">เฉลยจะปรากฏที่นี่...</p>
+                        </div>
+                        <p class="text-xs text-emerald-600 font-medium flex items-center gap-1.5">
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> คลิกที่การ์ดพลิกกลับ
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-4 w-full justify-between">
+                <button onclick="prevCard()" class="flex-1 py-3 px-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-600 shadow-sm flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i> ย้อนกลับ
+                </button>
+                <button onclick="toggleHint()" class="py-3 px-4 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-2xl font-bold text-amber-700 shadow-sm flex items-center justify-center gap-1 transition active:scale-95" title="แสดงคำใบ้">
+                    <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                </button>
+                <button onclick="nextCard()" class="flex-1 py-3 px-4 bg-purple-400 hover:bg-purple-500 rounded-2xl font-bold text-white shadow-md shadow-purple-200 flex items-center justify-center gap-2 transition active:scale-95">
+                    ถัดไป <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- QUIZ MODE -->
+        <div id="quiz-view" class="w-full max-w-xl flex flex-col items-center gap-6 hidden">
+            <div class="w-full bg-white border border-rose-100 rounded-3xl p-6 md:p-8 shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <span id="quiz-progress" class="text-xs font-bold text-purple-600 bg-purple-100 border border-purple-200 px-3 py-1 rounded-full tracking-wider">คำถามข้อที่ 1 / 10</span>
+                    <span id="quiz-score" class="text-xs font-bold bg-pink-100 text-pink-600 border border-pink-200 px-3 py-1 rounded-full">คะแนน: 0</span>
+                </div>
+
+                <h3 id="quiz-question" class="text-lg md:text-xl font-bold text-slate-800 mb-6 leading-relaxed">ข้อใดคือหลักการทำงานของ IoT?</h3>
+
+                <div id="quiz-options" class="flex flex-col gap-3">
+                    <!-- Dynamic Options -->
+                </div>
+
+                <div id="quiz-feedback" class="mt-4 p-4 rounded-2xl hidden text-sm font-semibold border"></div>
+
+                <button id="quiz-next-btn" onclick="nextQuizQuestion()" class="mt-6 w-full py-3.5 bg-purple-400 hover:bg-purple-500 font-bold rounded-2xl text-white shadow-md shadow-purple-200 transition active:scale-98 hidden">
+                    ข้อถัดไป
+                </button>
+            </div>
+        </div>
+
+        <!-- RESULT VIEW -->
+        <div id="result-view" class="w-full max-w-md bg-white border border-purple-100 rounded-3xl p-8 text-center hidden shadow-2xl">
+            <div class="w-20 h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-200 shadow-inner">
+                <i data-lucide="trophy" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">ยินดีด้วย! ทดสอบเสร็จสิ้น</h2>
+            <p class="text-slate-500 mb-6 font-medium">คุณทำคะแนนในแบบทดสอบได้:</p>
+            <div id="final-score" class="text-5xl font-black text-purple-500 mb-6 tracking-tight">0 / 10</div>
+            <button onclick="restartQuiz()" class="w-full py-3.5 bg-purple-400 hover:bg-purple-500 font-bold rounded-2xl text-white shadow-md shadow-purple-200 transition active:scale-95 flex items-center justify-center gap-2">
+                <i data-lucide="rotate-ccw" class="w-5 h-5"></i> เล่นใหม่อีกครั้ง
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Data Script -->
+    <script>
+        const cardsData = [
+            {
+                topic: "1. หลักการพื้นฐาน IoT",
+                question: "หลักการพื้นฐานของ Internet of Things (IoT) คืออะไร?",
+                answer: "การเชื่อมโยงอุปกรณ์และสิ่งต่างๆ เข้ากับเครือข่ายอินเทอร์เน็ต เพื่อให้สามารถสื่อสาร รับส่งข้อมูล และทำงานร่วมกันได้โดยอัตโนมัติแบบ Real-time",
+                hint: "เน้นเรื่องการเชื่อมต่ออุปกรณ์กับอินเทอร์เน็ตเพื่อสื่อสารข้อมูลอัตโนมัติ",
+                options: [
+                    "การเชื่อมโยงอุปกรณ์เข้ากับอินเทอร์เน็ต เพื่อให้สื่อสารและส่งข้อมูลกันได้อัตโนมัติ",
+                    "การใช้คอมพิวเตอร์สร้างภาพกราฟิก 3 มิติสำหรับการเรียนรู้",
+                    "การใช้อินเทอร์เน็ตเพื่อพิมพ์เอกสารระยะไกลเท่านั้น",
+                    "การตั้งค่าระบบความปลอดภัยคอมพิวเตอร์ด้วยรหัสผ่านรวดเร็ว"
+                ],
+                correct: 0
+            },
+            {
+                topic: "1. หลักการพื้นฐาน IoT",
+                question: "องค์ประกอบหลัก 3 ส่วนในการทำงานของระบบ IoT ประกอบด้วยอะไรบ้าง?",
+                answer: "1. อุปกรณ์/เซนเซอร์ (Sensors & Actuators)\n2. เครือข่ายการเชื่อมต่อ (Network/Connectivity)\n3. ระบบประมวลผลและส่งต่อข้อมูล (Data Processing & Cloud Platform)",
+                hint: "ต้องมีส่วนรับข้อมูล ส่วนส่งข้อมูล และส่วนประมวลผล",
+                options: [
+                    "คีย์บอร์ด, เมาส์, จอภาพ",
+                    "เซนเซอร์/อุปกรณ์, เครือข่ายการเชื่อมต่อ, ระบบประมวลผล/คลาวด์",
+                    "ผู้ดูแลระบบ, นักเรียน, ครูผู้สอน",
+                    "ไมโครโฟน, ลำโพง, หูฟัง"
+                ],
+                correct: 1
+            },
+            {
+                topic: "2. องค์ประกอบ IoT ในการศึกษา",
+                question: "ฮาร์ดแวร์สำคัญที่ทำหน้าที่ 'ตรวจวัดสิ่งแวดล้อม' ในชั้นเรียนคืออะไร?",
+                answer: "เซนเซอร์ (Sensors) เช่น เซนเซอร์วัดอุณหภูมิ, ตรวจจับแสง, วัดระดับเสียง หรือเซนเซอร์ตรวจจับการเคลื่อนไหว (PIR Sensor)",
+                hint: "อุปกรณ์ที่ใช้วัดค่าต่างๆ เช่น อุณหภูมิ แสง สัญญาณเคลื่อนไหว",
+                options: [
+                    "เซนเซอร์ (Sensors) วัดอุณหภูมิ/แสง/การเคลื่อนไหว",
+                    "ฮาร์ดดิสก์ (Harddisk) สำหรับเก็บข้อมูล",
+                    "พาวเวอร์แบงค์ (Powerbank) จ่ายไฟ",
+                    "การ์ดแสดงผล (GPU)"
+                ],
+                correct: 0
+            },
+            {
+                topic: "2. องค์ประกอบ IoT ในการศึกษา",
+                question: "ซอฟต์แวร์และคลาวด์ (Cloud Platform) มีบทบาทอย่างไรใน IoT การศึกษา?",
+                answer: "เป็นศูนย์กลางในการรวบรวม วิเคราะห์ และแสดงผลข้อมูล (Dashboard) ช่วยให้ครูและผู้ดูแลระบบดูสถิติการใช้งานและจัดเก็บข้อมูลได้อย่างปลอดภัย",
+                hint: "ทำหน้าที่เก็บ รวบรวม วิเคราะห์ และแสดงผลข้อมูลแดชบอร์ด",
+                options: [
+                    "ใช้ในการตัดต่อวิดีโอบทเรียน",
+                    "รวบรวม วิเคราะห์ และแสดงผลข้อมูลผ่าน Dashboard",
+                    "แปลงไฟล์เอกสารเป็น PDF",
+                    "ส่งข้อความแชทส่วนตัวระหว่างผู้เรียน"
+                ],
+                correct: 1
+            },
+            {
+                topic: "3. การประยุกต์ใช้ IoT ในการเรียนรู้",
+                question: "IoT ช่วยส่งเสริมการเรียนรู้เชิงปฏิสัมพันธ์ (Interactive Learning) ได้อย่างไร?",
+                answer: "ช่วยให้นักเรียนได้ทดลองจริงผ่านอุปกรณ์ลงมือปฏิบัติ (Hands-on) เช่น ชุดทดลองสมาร์ทฟาร์ม หรือบอร์ดไมโครคอนโทรลเลอร์ (Micro:bit / Arduino) ที่ตอบสนองแบบ Real-time",
+                hint: "เน้นการทดลองลงมือทำจริงด้วยบอร์ดทดลองและเซนเซอร์",
+                options: [
+                    "ใช้อ่านหนังสือแบบ PDF ได้เร็วขึ้น",
+                    "ทำให้นักเรียนลงมือปฏิบัติจริงกับบอร์ดไมโครคอนโทรลเลอร์และเห็นผลแบบ Real-time",
+                    "ใช้บันทึกเสียงครูผู้สอนเพื่อฟังย้อนหลัง",
+                    "จำกัดการเข้าถึงเว็บไซต์ภายนอก"
+                ],
+                correct: 1
+            },
+            {
+                topic: "3. การประยุกต์ใช้ IoT ในการเรียนรู้",
+                question: "การใช้ระบบ IoT ตรวจสอบการเข้าเรียน (Smart Attendance) มีคุณประโยชน์อย่างไร?",
+                answer: "ใช้ RFID หรือ Bluetooth Beacon เช็กชื่ออัตโนมัติ ช่วยลดเวลาการเช็กชื่อของครู และส่งแจ้งเตือนการเข้าเรียนให้ผู้ปกครองทราบได้ทันที",
+                hint: "ใช้เทคโนโลยีช่วยประหยัดเวลาเช็กชื่อและแจ้งเตือนผู้ปกครอง",
+                options: [
+                    "คิดเกรดเฉลี่ยให้อัตโนมัติ",
+                    "ใช้ RFID/Beacon เช็กชื่ออัตโนมัติ ลดเวลา และแจ้งเตือนผู้ปกครองได้ทันที",
+                    "ควบคุมโจทย์ข้อสอบไม่ให้รั่วไหล",
+                    "เปิดหน้าต่างห้องเรียนเมื่อถึงเวลาเลิกเรียน"
+                ],
+                correct: 1
+            },
+            {
+                topic: "3. การประยุกต์ใช้ IoT ในการเรียนรู้",
+                question: "IoT ช่วยในการจัดการพลังงานและสิ่งแวดล้อมในสถานศึกษาได้อย่างไร?",
+                answer: "ระบบการเปิด-ปิดไฟและปรับอากาศอัตโนมัติตามจำนวนคนและสภาพแสงภายนอก ช่วยลดการใช้พลังงานที่ไม่จำเป็นและประหยัดค่าไฟฟ้า",
+                hint: "เกี่ยวกับการเปิด-ปิดไฟและแอร์อัตโนมัติตามความจำเป็น",
+                options: [
+                    "สร้างพลังงานไฟฟ้าทดแทนขึ้นมาเองในห้องเรียน",
+                    "ควบคุมการเปิด-ปิดไฟและแอร์อัตโนมัติตามสภาพแวดล้อมเพื่อประหยัดพลังงาน",
+                    "วัดความเร็วในการเดินของนักเรียน",
+                    "ตรวจเช็กคุณภาพเครื่องพิมพ์ในโรงเรียน"
+                ],
+                correct: 1
+            },
+            {
+                topic: "4. แนวคิดโครงงาน Smart Classroom",
+                question: "โครงงาน 'ห้องเรียนอัจฉริยะประหยัดพลังงาน' ควรอุปกรณ์และแนวคิดอย่างไร?",
+                answer: "ใช้ Motion Sensor ตรวจจับคนในห้อง + Light Sensor วัดแสง เพื่อเปิด-ปิดไฟ/แอร์อัตโนมัติเมื่อไม่มีคนอยู่เกิน 5 นาที",
+                hint: "ผสมผสานตรวจจับการเคลื่อนไหวและระดับแสงเพื่อคุมอุปกรณ์ไฟฟ้า",
+                options: [
+                    "ใช้กล้องถ่ายรูปสแกนหนังสือเรียน",
+                    "ใช้ Motion Sensor ตรวจจับคน ร่วมกับ Light Sensor ปรับไฟ/แอร์อัตโนมัติ",
+                    "ใช้หูฟังตัดเสียงรบกวนให้นักเรียนทุกคน",
+                    "ใช้ลำโพงขยายเสียงให้ดังทั่วโรงเรียน"
+                ],
+                correct: 1
+            },
+            {
+                topic: "4. แนวคิดโครงงาน Smart Classroom",
+                question: "หากต้องการสร้างระบบ 'แจ้งเตือนคุณภาพอากาศ (Air Quality Monitor)' ในห้องเรียน ควรเลือกใช้เซนเซอร์ชนิดใด?",
+                answer: "เซนเซอร์วัดค่าฝุ่น PM2.5 (เช่น PMS5003) และเซนเซอร์วัดคาร์บอนไดออกไซด์ ($CO_2$) เพื่อระบายอากาศเมื่อค่าเกินมาตรฐาน",
+                hint: "ใช้วัดฝุ่นละออง PM2.5 และแก๊สคาร์บอนไดออกไซด์",
+                options: [
+                    "เซนเซอร์วัดความดันน้ำ",
+                    "เซนเซอร์วัดค่าฝุ่น PM2.5 และแก๊สคาร์บอนไดออกไซด์ ($CO_2$)",
+                    "เซนเซอร์ตรวจจับอัตราการเต้นของหัวใจ",
+                    "เซนเซอร์วัดความเร็วลมภายนอกอาคาร"
+                ],
+                correct: 1
+            },
+            {
+                topic: "4. แนวคิดโครงงาน Smart Classroom",
+                question: "การออกแบบระบบความปลอดภัยใน Smart Classroom ควรนำ IoT ไปประยุกต์อย่างไร?",
+                answer: "ติดตั้ง Door Sensor และกล้อง AI ตรวจจับใบหน้า แจ้งเตือนผ่าน LINE Notify หรือ แอปมือถือ เมื่อพบการบุกรุกนอกเวลาทำการ",
+                hint: "ตรวจจับประตูและการบุกรุกเพื่อส่งแจ้งเตือนเข้าสมาร์ทโฟน",
+                options: [
+                    "ติดตั้งระบบล็อกประตูด้วยรหัสผ่านกลไกแบบเก่า",
+                    "ใช้ Door Sensor และกล้อง AI แจ้งเตือนการบุกรุกผ่าน LINE/Mobile App",
+                    "เปิดไฟทิ้งไว้ตลอด 24 ชั่วโมง",
+                    "จ้างเจ้าหน้าที่รักษาความปลอดภัยเพิ่มขึ้น"
+                ],
+                correct: 1
+            }
+        ];
+
+        let currentIndex = 0;
+        let isFlipped = false;
+        let quizIndex = 0;
+        let quizScore = 0;
+        let currentMode = 'cards';
+
+        // DOM Elements
+        const cardInner = document.getElementById('card-inner');
+        const cardFrontText = document.getElementById('card-front-text');
+        const cardBackText = document.getElementById('card-back-text');
+        const cardHint = document.getElementById('card-hint');
+        const cardIndex = document.getElementById('card-index');
+        const cardTopic = document.getElementById('card-topic');
+        const progressBar = document.getElementById('progress-bar');
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Update Card
+        function updateCard() {
+            isFlipped = false;
+            cardInner.classList.remove('rotate-y-180');
+            cardHint.classList.add('hidden');
+            
+            const data = cardsData[currentIndex];
+            cardFrontText.innerText = data.question;
+            cardBackText.innerText = data.answer;
+            cardHint.innerText = "คำใบ้: " + data.hint;
+            cardTopic.innerText = data.topic;
+            cardIndex.innerText = `ข้อที่ ${currentIndex + 1} / ${cardsData.length}`;
+            
+            const progress = ((currentIndex + 1) / cardsData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                cardInner.classList.add('rotate-y-180');
+            } else {
+                cardInner.classList.remove('rotate-y-180');
+            }
+        }
+
+        function toggleHint() {
+            cardHint.classList.toggle('hidden');
+        }
+
+        function nextCard() {
+            if (currentIndex < cardsData.length - 1) {
+                currentIndex++;
+                updateCard();
+            } else {
+                currentIndex = 0;
+                updateCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            }
+        }
+
+        // Mode Switching
+        function switchMode(mode) {
+            currentMode = mode;
+            const cardsView = document.getElementById('cards-view');
+            const quizView = document.getElementById('quiz-view');
+            const resultView = document.getElementById('result-view');
+            const btnCards = document.getElementById('mode-cards');
+            const btnQuiz = document.getElementById('mode-quiz');
+
+            if (mode === 'cards') {
+                cardsView.classList.remove('hidden');
+                quizView.classList.add('hidden');
+                resultView.classList.add('hidden');
+                
+                btnCards.className = "px-4 py-2 rounded-xl bg-purple-400 text-white font-semibold text-sm flex items-center gap-2 shadow-md shadow-purple-200 hover:bg-purple-500 transition";
+                btnQuiz.className = "px-4 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 font-semibold text-sm flex items-center gap-2 hover:bg-rose-100/50 transition";
+            } else {
+                cardsView.classList.add('hidden');
+                quizView.classList.remove('hidden');
+                resultView.classList.add('hidden');
+
+                btnQuiz.className = "px-4 py-2 rounded-xl bg-purple-400 text-white font-semibold text-sm flex items-center gap-2 shadow-md shadow-purple-200 hover:bg-purple-500 transition";
+                btnCards.className = "px-4 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 font-semibold text-sm flex items-center gap-2 hover:bg-rose-100/50 transition";
+
+                restartQuiz();
+            }
+        }
+
+        // Quiz Logic
+        function renderQuizQuestion() {
+            const data = cardsData[quizIndex];
+            document.getElementById('quiz-progress').innerText = `คำถามข้อที่ ${quizIndex + 1} / ${cardsData.length}`;
+            document.getElementById('quiz-score').innerText = `คะแนน: ${quizScore}`;
+            document.getElementById('quiz-question').innerText = data.question;
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.add('hidden');
+            
+            const nextBtn = document.getElementById('quiz-next-btn');
+            nextBtn.classList.add('hidden');
+
+            data.options.forEach((opt, idx) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left p-4 bg-slate-50 hover:bg-purple-50 border border-slate-200 rounded-2xl transition text-slate-700 font-medium text-sm flex items-center justify-between";
+                button.innerHTML = `<span>${opt}</span> <i data-lucide="circle" class="w-4 h-4 text-slate-400"></i>`;
+                button.onclick = () => selectOption(idx, button);
+                optionsContainer.appendChild(button);
+            });
+
+            lucide.createIcons();
+        }
+
+        function selectOption(selectedIdx, btnElement) {
+            const data = cardsData[quizIndex];
+            const optionsContainer = document.getElementById('quiz-options');
+            const buttons = optionsContainer.querySelectorAll('button');
+            const feedback = document.getElementById('quiz-feedback');
+            const nextBtn = document.getElementById('quiz-next-btn');
+
+            // Disable all buttons after selection
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedIdx === data.correct) {
+                quizScore++;
+                btnElement.className = "w-full text-left p-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl transition text-emerald-800 font-semibold text-sm flex items-center justify-between";
+                
+                feedback.className = "mt-4 p-4 rounded-2xl text-sm font-medium bg-emerald-50 border border-emerald-200 text-emerald-800";
+                feedback.innerHTML = "✓ ถูกต้อง! " + data.answer;
+            } else {
+                btnElement.className = "w-full text-left p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl transition text-rose-800 font-semibold text-sm flex items-center justify-between";
+                
+                buttons[data.correct].className = "w-full text-left p-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl transition text-emerald-800 font-semibold text-sm flex items-center justify-between";
+
+                feedback.className = "mt-4 p-4 rounded-2xl text-sm font-medium bg-rose-50 border border-rose-200 text-rose-800";
+                feedback.innerHTML = "✕ ยังไม่ถูกต้อง คำตอบที่ถูกต้องคือ: " + data.options[data.correct];
+            }
+
+            document.getElementById('quiz-score').innerText = `คะแนน: ${quizScore}`;
+            feedback.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuizQuestion() {
+            if (quizIndex < cardsData.length - 1) {
+                quizIndex++;
+                renderQuizQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-view').classList.add('hidden');
+            document.getElementById('result-view').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${quizScore} / ${cardsData.length}`;
+        }
+
+        function restartQuiz() {
+            quizIndex = 0;
+            quizScore = 0;
+            document.getElementById('result-view').classList.add('hidden');
+            document.getElementById('quiz-view').classList.remove('hidden');
+            renderQuizQuestion();
+        }
+
+        // Initialize First Card
+        updateCard();
+    </script>
+</body>
+</html>
